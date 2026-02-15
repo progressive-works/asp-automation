@@ -1,0 +1,38 @@
+{
+  "name": "adtrack-actor",
+  "version": "1.0.0",
+  "buildTag": "latest",
+  "input": {
+    "title": "AdTrack CSV Downloader Input",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "loginId": {
+        "title": "ログインID",
+        "type": "string"
+      },
+      "password": {
+        "title": "パスワード",
+        "type": "string",
+        "isSecret": true
+      },
+      "dateFrom": {
+        "title": "開始日 (YYYY-MM-DD)",
+        "type": "string",
+        "description": "省略時: 1年前の今日"
+      },
+      "dateTo": {
+        "title": "終了日 (YYYY-MM-DD)",
+        "type": "string",
+        "description": "省略時: 今日"
+      },
+      "targetAds": {
+        "title": "対象案件 (value配列)",
+        "type": "array",
+        "description": "省略時: 全案件を処理",
+        "items": { "type": "string" }
+      }
+    },
+    "required": ["loginId", "password"]
+  }
+}
