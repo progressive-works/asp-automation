@@ -1,0 +1,55 @@
+{
+  "name": "asp-universal-scraper",
+  "version": "1.0.0",
+  "buildTag": "latest",
+  "input": {
+    "title": "ASP Universal Scraper Input",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "aspId": {
+        "title": "ASP ID",
+        "type": "string",
+        "description": "一意のASP識別子（例: ASP_ADTRACK）"
+      },
+      "aspName": {
+        "title": "ASP名",
+        "type": "string",
+        "description": "表示名（例: アドトラック）"
+      },
+      "loginUrl": {
+        "title": "ログインURL",
+        "type": "string"
+      },
+      "loginId": {
+        "title": "ログインID",
+        "type": "string"
+      },
+      "loginPassword": {
+        "title": "パスワード",
+        "type": "string",
+        "isSecret": true
+      },
+      "steps": {
+        "title": "操作ステップ定義",
+        "type": "array",
+        "description": "ログイン後に実行する操作ステップの配列",
+        "items": {
+          "type": "object"
+        }
+      },
+      "encoding": {
+        "title": "ファイルエンコーディング",
+        "type": "string",
+        "default": "utf-8",
+        "description": "DLファイルの文字エンコーディング（Shift_JIS等）"
+      },
+      "timeout": {
+        "title": "タイムアウト(ms)",
+        "type": "integer",
+        "default": 60000
+      }
+    },
+    "required": ["aspId", "loginUrl", "loginId", "loginPassword", "steps"]
+  }
+}
