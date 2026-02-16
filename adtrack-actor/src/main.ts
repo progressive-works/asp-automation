@@ -104,6 +104,7 @@ try {
     ];
     await clickFirst(page, submitSelectors, 'ログインボタン');
     await page.waitForLoadState('networkidle', { timeout: 30000 });
+    await page.waitForTimeout(3000);
   }
 
   log.info(`ログイン後URL: ${page.url()}`);
@@ -117,6 +118,7 @@ try {
     'https://admin.ad-track.jp/report/index.php?a=article/affiliate/CvApprove',
     { waitUntil: 'networkidle' }
   );
+  await page.waitForTimeout(2000);
 
   await kvStore.setValue('screenshot-02-approval-page', await page.screenshot({ fullPage: true }), {
     contentType: 'image/png',
