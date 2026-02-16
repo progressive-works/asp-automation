@@ -2,3 +2,4 @@ node_modules/
 storage/
 apify_storage/
 .env
+claude.md

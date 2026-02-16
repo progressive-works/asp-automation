@@ -336,48 +336,25 @@ async function downloadCvListCsv(
 // ============================================================
 
 async function getAdOptions(page: any): Promise<AdOption[]> {
-  // 全selectから最も選択肢が多いものを広告プルダウンと推定
-  const allSelects = await page.$$eval('select', (selects: HTMLSelectElement[]) =>
-    selects.map((s) => ({
-      name: s.name || s.id || '',
-      options: Array.from(s.options)
-        .filter((o) => o.value && o.value !== '' && o.value !== '-' && o.value !== '0')
+  const adSelect = await page.$$eval(
+    'select[name="article_id"] option',
+    (opts: HTMLOptionElement[]) =>
+      opts
+        .filter((o) => o.value && o.value !== '')
         .map((o) => ({ value: o.value, label: o.textContent?.trim() || '' })),
-    }))
   );
 
-  const adSelect = allSelects
-    .filter((s: any) => s.options.length > 0)
-    .sort((a: any, b: any) => b.options.length - a.options.length)[0];
-
-  if (adSelect && adSelect.options.length > 0) {
-    log.info(`広告プルダウン検出: name="${adSelect.name}" (${adSelect.options.length}件)`);
-    return adSelect.options;
+  if (adSelect.length > 0) {
+    log.info(`広告プルダウン検出: select[name="article_id"] (${adSelect.length}件)`);
+    return adSelect;
   }
 
-  throw new Error('広告プルダウンが見つかりません');
+  throw new Error('広告プルダウン(article_id)が見つかりません');
 }
 
 async function selectAd(page: any, value: string): Promise<void> {
-  const selects = await page.$$('select');
-  for (const select of selects) {
-    try {
-      const options = await select.$$eval('option', (opts: HTMLOptionElement[]) =>
-        opts.map((o) => o.value)
-      );
-      if (options.includes(value)) {
-        const name = await select.getAttribute('name');
-        const id = await select.getAttribute('id');
-        const selector = name ? `select[name="${name}"]` : id ? `select#${id}` : null;
-        if (selector) {
-          await page.selectOption(selector, value);
-          log.info(`  広告選択: ${selector} = ${value}`);
-          return;
-        }
-      }
-    } catch { /* 次 */ }
-  }
-  throw new Error(`広告選択失敗: ${value}`);
+  await page.selectOption('select[name="article_id"]', value);
+  log.info(`  広告選択: select[name="article_id"] = ${value}`);
 }
 
 async function clickSearch(page: any): Promise<void> {
