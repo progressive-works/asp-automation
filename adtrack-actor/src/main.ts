@@ -3,7 +3,7 @@
  *
  * 処理フロー:
  *   1. ログイン
- *   2. 広告管理 → 成果承認へメニュー遷移
+ *   2. 広告管理 → 成果承認へ遷移（sub_redirect使用）
  *   3. targetAdsをループ:
  *      案件選択 → ステータス「未承認」→ 検索 → CSV DL
  *
@@ -95,7 +95,7 @@ try {
     contentType: 'image/png',
   });
 
-  // ===== Step 2: 成果承認ページへメニュー遷移 =====
+  // ===== Step 2: 成果承認ページへ遷移 =====
   await navigateToApproval(page);
 
   await kvStore.setValue('screenshot-02-approval-page', await page.screenshot({ fullPage: true }), {
@@ -153,15 +153,17 @@ await Actor.exit();
 
 
 // ============================================================
-//  メニュー遷移
+//  ページ遷移（javascript:sub_redirect を使用）
 // ============================================================
 
 async function navigateToApproval(page: any): Promise<void> {
-  log.info('メニュー遷移: 広告管理 → 成果承認');
-  await page.click('a:has-text("広告管理")');
+  log.info('遷移: 広告管理（CampaignList）');
+  await page.evaluate(() => (window as any).sub_redirect('article/article/CampaignList'));
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(1000);
-  await page.click('a:has-text("成果承認")');
+
+  log.info('遷移: 成果承認（CvApprove）');
+  await page.evaluate(() => (window as any).sub_redirect('article/affiliate/CvApprove'));
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(1000);
 }
@@ -179,7 +181,7 @@ async function downloadApprovalCsv(
   try {
     log.info(`[成果承認] ${ad.label}`);
 
-    // メニュークリックで成果承認ページへ遷移
+    // 成果承認ページへ遷移
     await navigateToApproval(page);
 
     // ステータス「未承認」ラジオボタン
@@ -193,7 +195,7 @@ async function downloadApprovalCsv(
     await page.selectOption('select[name="article_id"]', ad.value);
     log.info(`  広告選択: ${ad.value}`);
 
-    // 検索
+    // 検索ボタン
     await clickSearch(page);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
@@ -204,10 +206,12 @@ async function downloadApprovalCsv(
       { contentType: 'image/png' }
     );
 
-    // CSV DL
+    // CSV DL: input.btn_exp.excel → sub_export('excel')
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 30000 }),
-      clickCsvButton(page),
+      page.click('input.btn_exp.excel').catch(() =>
+        page.evaluate(() => (window as any).sub_export('excel'))
+      ),
     ]);
 
     const filePath = await download.path();
@@ -242,23 +246,6 @@ async function clickSearch(page: any): Promise<void> {
     'input[type="submit"]',
   ];
   await clickFirst(page, selectors, '検索ボタン');
-}
-
-async function clickCsvButton(page: any): Promise<void> {
-  const selectors = [
-    'a:has-text("CSV")',
-    'button:has-text("CSV")',
-    'a[href*="csv"]',
-    'a[href*="CSV"]',
-    'a[href*="download"]',
-    'a[href*="export"]',
-    'img[alt*="CSV"]',
-    'img[alt*="csv"]',
-    'a img[src*="csv"]',
-    'a img[src*="excel"]',
-    'a img[src*="xls"]',
-  ];
-  await clickFirst(page, selectors, 'CSVボタン');
 }
 
 async function fillFirst(
