@@ -2,7 +2,7 @@
  * アドトラック専用 Actor（①成果承認のみ）
  *
  * 処理フロー:
- *   1. ログイン
+ *   1. ログイン（広告主ログイン: login_id2 / password2）
  *   2. 広告管理 → 成果承認へ遷移（sub_redirect使用）
  *   3. targetAdsをループ:
  *      案件選択 → ステータス「未承認」→ 検索 → CSV DL
@@ -55,40 +55,24 @@ context.setDefaultTimeout(60000);
 const page = await context.newPage();
 
 try {
-  // ===== Step 1: ログイン =====
+  // ===== Step 1: ログイン（広告主ログイン） =====
   log.info('ログインページへ遷移...');
   await page.goto('https://admin.ad-track.jp/report/index.php', {
     waitUntil: 'networkidle',
   });
 
-  const loginForm = await page.$('input[type="password"]');
-  if (loginForm) {
-    log.info('ログインフォーム入力中...');
+  log.info('広告主ログインフォーム入力中...');
+  await page.fill('input[name="login_id2"]', input.loginId);
+  await page.fill('input[name="password2"]', input.password);
 
-    const idSelectors = [
-      'input[name="userId"]',
-      'input[name="login_id"]',
-      'input[name="email"]',
-      'input[name="id"]',
-      'input[type="text"]:first-of-type',
-    ];
-    await fillFirst(page, idSelectors, input.loginId, 'ログインID');
-    await page.fill('input[type="password"]', input.password);
+  await kvStore.setValue('screenshot-00-login', await page.screenshot({ fullPage: true }), {
+    contentType: 'image/png',
+  });
 
-    await kvStore.setValue('screenshot-00-login', await page.screenshot({ fullPage: true }), {
-      contentType: 'image/png',
-    });
-
-    const submitSelectors = [
-      'input[type="submit"]',
-      'button[type="submit"]',
-      'input[name="login"]',
-      'button:has-text("ログイン")',
-    ];
-    await clickFirst(page, submitSelectors, 'ログインボタン');
-    await page.waitForLoadState('networkidle', { timeout: 30000 });
-    await page.waitForTimeout(3000);
-  }
+  // do_login(2) でログイン実行
+  await page.evaluate(() => (window as any).do_login(2));
+  await page.waitForLoadState('networkidle', { timeout: 30000 });
+  await page.waitForTimeout(3000);
 
   log.info(`ログイン後URL: ${page.url()}`);
   await kvStore.setValue('screenshot-01-after-login', await page.screenshot({ fullPage: true }), {
@@ -246,22 +230,6 @@ async function clickSearch(page: any): Promise<void> {
     'input[type="submit"]',
   ];
   await clickFirst(page, selectors, '検索ボタン');
-}
-
-async function fillFirst(
-  page: any, selectors: string[], value: string, label: string,
-): Promise<void> {
-  for (const sel of selectors) {
-    try {
-      const el = await page.waitForSelector(sel, { timeout: 2000 });
-      if (el) {
-        await page.fill(sel, value);
-        log.info(`  ${label}: ${sel}`);
-        return;
-      }
-    } catch { /* 次 */ }
-  }
-  throw new Error(`${label} が見つかりません`);
 }
 
 async function clickFirst(
