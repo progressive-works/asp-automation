@@ -50,7 +50,6 @@ try {
   const csvLinks = await page.$$eval('td.download.reward a', (anchors) =>
     anchors.map((a) => {
       const href = a.getAttribute('href') || '';
-      // hrefからプログラムIDを抽出: /order/order-confirmation/s00000000218001/download
       const match = href.match(/order-confirmation\/(s\d+)\/download/);
       return {
         href,
@@ -90,22 +89,17 @@ try {
     try {
       log.info(`Downloading CSV: ${programName} (${csvLink.programId})`);
 
-      // ダウンロードイベントを待機しながらリンクをクリック
       const [download] = await Promise.all([
         page.waitForEvent('download', { timeout: 30000 }),
         page.click(`td.download.reward a[href="${csvLink.href}"]`),
       ]);
 
-      // ダウンロードしたファイルを読み込み
       const filePath = await download.path();
       if (filePath) {
         const fs = await import('fs');
-        // const csvContent = fs.readFileSync(filePath, 'utf-8');
-        // Shift_JIS → UTF-8 に変換
         const rawBuffer = fs.readFileSync(filePath);
         const csvContent = iconv.decode(rawBuffer, 'Shift_JIS');
 
-        // Key-Value Storeに保存
         const key = `csv_${csvLink.programId}`;
         await kvStore.setValue(key, csvContent, {
           contentType: 'text/csv',
@@ -115,7 +109,6 @@ try {
         results.push({ programId: csvLink.programId, programName, success: true });
       }
 
-      // 次のDLの前に少し待機（サーバー負荷対策）
       await page.waitForTimeout(2000);
     } catch (error: any) {
       log.error(`Failed: ${csvLink.programId} - ${error.message}`);
