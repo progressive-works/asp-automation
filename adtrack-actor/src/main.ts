@@ -194,9 +194,7 @@ async function downloadApprovalCsv(
     // CSV DL: input.btn_exp.excel → sub_export('excel')
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 30000 }),
-      page.click('input.btn_exp.excel').catch(() =>
-        page.evaluate(() => (window as any).sub_export('excel'))
-      ),
+      page.evaluate(() => (window as any).sub_export('csv')),
     ]);
 
     const filePath = await download.path();
