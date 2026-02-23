@@ -14,6 +14,7 @@
  */
 import { Actor, log } from 'apify';
 import { chromium } from 'playwright';
+import iconv from 'iconv-lite';
 
 interface InputSchema {
   loginId: string;
@@ -205,9 +206,10 @@ async function downloadApprovalCsv(
     const rawBuffer = fs.readFileSync(filePath);
     const fileName = `approval_${ad.value}.xls`;
     const key = `csv_approval_${ad.value}`;
-    await kvStore.setValue(key, rawBuffer, { contentType: 'application/vnd.ms-excel' });
+    const csvContent = iconv.decode(rawBuffer, 'Shift_JIS');
+    await kvStore.setValue(key, csvContent, { contentType: 'application/vnd.ms-excel' });
 
-    log.info(`  保存: ${key} (${rawBuffer.length} bytes)`);
+    log.info(`  保存: ${key} (${csvContent.length} bytes)`);
     return { adValue: ad.value, adLabel: ad.label, success: true, fileName };
 
   } catch (error: any) {
