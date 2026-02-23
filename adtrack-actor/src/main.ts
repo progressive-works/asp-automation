@@ -14,6 +14,7 @@
  */
 import { Actor, log } from 'apify';
 import { chromium } from 'playwright';
+import iconv from 'iconv-lite';
 
 interface InputSchema {
   loginId: string;
@@ -203,12 +204,13 @@ async function downloadApprovalCsv(
 
     const fs = await import('fs');
     const rawBuffer = fs.readFileSync(filePath);
+    const csvContent = iconv.decode(rawBuffer, 'Shift_JIS');
     const suggestedName = download.suggestedFilename();
     const fileName = `approval_${ad.value}_${suggestedName}`;
     const key = `csv_approval_${ad.value}`;
-    await kvStore.setValue(key, rawBuffer, { contentType: 'text/csv' });
+    await kvStore.setValue(key, csvContent, { contentType: 'text/csv' });
 
-    log.info(`  保存: ${key} (${rawBuffer.length} bytes)`);
+    log.info(`  保存: ${key} (${csvContent.length} bytes)`);
     return { adValue: ad.value, adLabel: ad.label, success: true, fileName };
 
   } catch (error: any) {
