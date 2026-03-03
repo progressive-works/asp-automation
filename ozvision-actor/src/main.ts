@@ -202,7 +202,7 @@ async function selectPromotionByAdName(page: Page, adName: string): Promise<void
   await promotionFrame.waitForTimeout(1000);
   await selectAdResultInFrame(promotionFrame, adName);
 
-  await clickFirstInFrame(promotionFrame, [
+  const confirmed = await tryClickFirstInFrame(promotionFrame, [
     'input[type="submit"][value*="選択"]',
     'input[type="button"][value*="選択"]',
     'input[type="submit"][value*="決定"]',
@@ -212,7 +212,20 @@ async function selectPromotionByAdName(page: Page, adName: string): Promise<void
     'a:has-text("決定")',
   ], '広告選択確定ボタン');
 
+  // サイトによっては候補クリック時点で確定されるため、確定ボタンは任意扱いにする。
+  if (!confirmed) {
+    log.info('広告選択確定ボタンが見つからないため、候補クリック確定として続行');
+  }
+
   await waitForFrameClose(page, promotionFrame, 10_000);
+
+  await clickFirst(page, [
+    'div.button-search input[type="submit"][value="検索する"]',
+    'input[type="submit"][value="検索する"]',
+    'input[type="submit"][value*="検索"]',
+  ], '検索するボタン');
+  await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => null);
+  await page.waitForTimeout(800);
 }
 
 async function downloadCsvWithUtf8(
@@ -355,6 +368,21 @@ async function clickFirstInFrame(frame: Frame, selectors: string[], label: strin
     }
   }
   throw new Error(`${label} が見つかりません`);
+}
+
+async function tryClickFirstInFrame(frame: Frame, selectors: string[], label: string): Promise<boolean> {
+  for (const sel of selectors) {
+    const loc = frame.locator(sel).first();
+    try {
+      await loc.waitFor({ state: 'visible', timeout: 2000 });
+      await loc.click();
+      log.info(`${label}: ${sel}`);
+      return true;
+    } catch {
+      // try next
+    }
+  }
+  return false;
 }
 
 async function fillFirstInFrame(
