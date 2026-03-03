@@ -289,14 +289,13 @@ function decodeCsv(raw: Buffer): string {
 }
 
 async function selectAdResultInFrame(frame: Frame, adName: string): Promise<void> {
-  const escaped = escapeRegExp(adName);
-  const firstLink = frame.locator(`a:has-text("${adName}")`).first();
+  const firstLink = frame.locator('a', { hasText: adName }).first();
   if (await firstLink.count()) {
     await firstLink.click();
     return;
   }
 
-  const row = frame.locator(`tr:has-text("${adName}")`).first();
+  const row = frame.locator('tr', { hasText: adName }).first();
   if (await row.count()) {
     const radio = row.locator('input[type="radio"], input[type="checkbox"]').first();
     if (await radio.count()) {
@@ -312,7 +311,7 @@ async function selectAdResultInFrame(frame: Frame, adName: string): Promise<void
     }
   }
 
-  const textMatched = frame.locator(`text=/${escaped}/`).first();
+  const textMatched = frame.getByText(adName).first();
   if (await textMatched.count()) {
     await textMatched.click();
     return;
@@ -428,8 +427,4 @@ function slugify(value: string): string {
     .replace(/^_+|_+$/g, '')
     .toLowerCase();
   return normalized || 'ad';
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
