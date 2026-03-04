@@ -1,0 +1,41 @@
+{
+  "name": "moshimo-actor",
+  "version": "1.0.0",
+  "buildTag": "latest",
+  "input": {
+    "title": "Moshimo Affiliate CSV Downloader Input",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "loginId": {
+        "title": "ログインID（メールアドレス）",
+        "type": "string"
+      },
+      "password": {
+        "title": "パスワード",
+        "type": "string",
+        "isSecret": true
+      },
+      "targetAds": {
+        "title": "対象案件配列",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "title": "プロモーションID",
+              "type": "string"
+            },
+            "label": {
+              "title": "案件名",
+              "type": "string"
+            }
+          },
+          "required": ["value", "label"]
+        },
+        "minItems": 1
+      }
+    },
+    "required": ["loginId", "password", "targetAds"]
+  }
+}
