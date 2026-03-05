@@ -154,8 +154,8 @@ async function setSearchConditions(page: Page): Promise<void> {
   const dateRange = `${formatDate(oneYearAgoJst)} - ${formatDate(nowJst)}`;
   log.info(`日付範囲: ${dateRange}`);
 
-  // daterangeピッカーに直接入力
-  const dateInput = page.locator('input[name="searchRegisterDate"]');
+  // daterangeピッカーに直接入力（#searchAt で一意指定）
+  const dateInput = page.locator('input#searchAt');
   await dateInput.click();
   await dateInput.fill(dateRange);
   await page.keyboard.press('Enter');
