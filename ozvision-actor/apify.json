@@ -3,10 +3,16 @@
   "version": "1.0.0",
   "buildTag": "latest",
   "input": {
-    "title": "Ozvision CSV Downloader Input",
+    "title": "Ozvision/Daicon CSV Downloader Input",
     "type": "object",
     "schemaVersion": 1,
     "properties": {
+      "aspId": {
+        "title": "ASP識別子",
+        "type": "string",
+        "enum": ["ozvision", "daicon"],
+        "description": "対象サイト名"
+      },
       "loginId": {
         "title": "ログインID（メールアドレス）",
         "type": "string"
@@ -25,6 +31,6 @@
         "minItems": 1
       }
     },
-    "required": ["loginId", "password", "targetAds"]
+    "required": ["aspId", "loginId", "password", "targetAds"]
   }
 }

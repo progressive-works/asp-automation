@@ -4,10 +4,21 @@ import { readFileSync } from 'fs';
 import iconv from 'iconv-lite';
 
 interface InputSchema {
+  aspId: string;
   loginId: string;
   password: string;
   targetAds: string[];
 }
+
+interface SiteConfig {
+  baseUrl: string;
+  aspName: string;
+}
+
+const SITES: Record<string, SiteConfig> = {
+  ozvision: { baseUrl: 'https://ozasp.jp', aspName: 'オズビジョン' },
+  daicon:   { baseUrl: 'https://daicon-link.com', aspName: 'ダイコン' },
+};
 
 interface FileResult {
   adName: string;
@@ -23,20 +34,27 @@ interface FailureResult {
   retried: boolean;
 }
 
-const LOGIN_URL = 'https://ozasp.jp/contents.php?c=c_advertiser_login';
-const UNAPPROVED_URL = 'https://ozasp.jp/search.php?type=action_log_raw&tab_type=0';
 const DEFAULT_TIMEOUT = 60_000;
 const DOWNLOAD_TIMEOUT = 30_000;
 
 await Actor.init();
 
 const input = await Actor.getInput<InputSchema>();
+if (!input?.aspId || !SITES[input.aspId]) {
+  throw new Error(`aspId is required and must be one of: ${Object.keys(SITES).join(', ')}`);
+}
 if (!input?.loginId || !input?.password) {
   throw new Error('loginId and password are required');
 }
 if (!input.targetAds || input.targetAds.length === 0) {
   throw new Error('targetAds is required and must not be empty');
 }
+
+const site = SITES[input.aspId];
+const aspId = input.aspId;
+const aspName = site.aspName;
+const LOGIN_URL = `${site.baseUrl}/contents.php?c=c_advertiser_login`;
+const UNAPPROVED_URL = `${site.baseUrl}/search.php?type=action_log_raw&tab_type=0`;
 
 const targetAds = Array.from(
   new Set(
@@ -116,8 +134,8 @@ try {
       : 'SUCCESS';
 
   await Actor.pushData({
-    aspId: 'ozvision',
-    aspName: 'オズビジョン',
+    aspId,
+    aspName,
     status,
     files,
     failures,
@@ -133,8 +151,8 @@ try {
   await saveScreenshot(kvStore, page, screenshotKeys, 'fatal-error');
 
   await Actor.pushData({
-    aspId: 'ozvision',
-    aspName: 'オズビジョン',
+    aspId,
+    aspName,
     status: 'FAILED',
     files,
     failures: [
@@ -266,11 +284,11 @@ async function downloadCsvWithUtf8(
   const content = decodeCsv(raw);
   const slug = slugify(adName);
   const timestamp = Date.now();
-  const kvStoreKey = `csv_ozvision_${slug}_${timestamp}`;
+  const kvStoreKey = `csv_${aspId}_${slug}_${timestamp}`;
 
   await kvStore.setValue(kvStoreKey, content, { contentType: 'text/csv; charset=utf-8' });
 
-  const suggested = download.suggestedFilename() || `ozvision_${slug}_${timestamp}.csv`;
+  const suggested = download.suggestedFilename() || `${aspId}_${slug}_${timestamp}.csv`;
 
   return {
     adName,
@@ -411,7 +429,7 @@ async function saveScreenshot(
   screenshotKeys: string[],
   label: string,
 ): Promise<void> {
-  const key = `screenshot_ozvision_${label}_${Date.now()}`;
+  const key = `screenshot_${aspId}_${label}_${Date.now()}`;
   const image = await page.screenshot({ fullPage: true }).catch(() => null);
   if (!image) return;
   await kvStore.setValue(key, image, { contentType: 'image/png' });
