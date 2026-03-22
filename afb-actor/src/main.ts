@@ -244,13 +244,13 @@ async function downloadCsvForProgram(
     }
   }
 
-  // CSVダウンロードボタンをクリック
+  // CSVダウンロードボタンをクリック（input#csv_dlは画面外に隠されているのでlabelかdivをクリック）
   const [download] = await Promise.all([
     page.waitForEvent('download', { timeout: DOWNLOAD_TIMEOUT }),
     clickFirst(page, [
-      'input#csv_dl',
-      'input[name="csv_dl"]',
-      '[data-testid="approval-CSV-download"] input[type="submit"]',
+      '[data-testid="approval-CSV-download"]',
+      'label[for="csv_dl"]',
+      'div[data-tooltip="CSVダウンロード"]',
     ], 'CSVダウンロードボタン'),
   ]);
 
