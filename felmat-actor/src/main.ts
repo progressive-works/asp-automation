@@ -210,6 +210,16 @@ async function downloadCsvForProgram(
   await page.waitForTimeout(2000);
   await saveScreenshot(kvStore, page, screenshotKeys, `after-search-${slug}`);
 
+  // 検索結果が0件の場合はスキップ
+  const noData = await page.locator('.alert-danger:has-text("成果データが存在しません")').first()
+    .isVisible()
+    .catch(() => false);
+
+  if (noData) {
+    log.info(`検索結果0件のためスキップ: ${ad.label}`);
+    return;
+  }
+
   // 「アップロード用CSVダウンロード」ドロップダウンを開く
   await clickFirst(page, [
     'button.btn-warning.dropdown-toggle',
