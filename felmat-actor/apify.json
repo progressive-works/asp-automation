@@ -1,0 +1,41 @@
+{
+  "name": "felmat-actor",
+  "version": "1.0.0",
+  "buildTag": "latest",
+  "input": {
+    "title": "Felmat CSV Downloader Input",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "loginId": {
+        "title": "ログインID",
+        "type": "string"
+      },
+      "password": {
+        "title": "パスワード",
+        "type": "string",
+        "isSecret": true
+      },
+      "targetAds": {
+        "title": "対象案件配列",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "title": "プログラムID（select option value）",
+              "type": "string"
+            },
+            "label": {
+              "title": "案件名",
+              "type": "string"
+            }
+          },
+          "required": ["value", "label"]
+        },
+        "minItems": 1
+      }
+    },
+    "required": ["loginId", "password", "targetAds"]
+  }
+}
