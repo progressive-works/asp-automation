@@ -170,11 +170,10 @@ async function login(page: Page, loginId: string, password: string): Promise<voi
   await Promise.all([
     page.waitForLoadState('networkidle', { timeout: DEFAULT_TIMEOUT }).catch(() => null),
     clickFirst(page, [
-      'input[type="submit"][value="ログイン"]',
-      'input.m-btn__submit',
-      'input[type="submit"]',
-      'button[type="submit"]',
-    ], 'ログインボタン'),
+      'form[action*="client"] input[type="submit"][value="ログイン"]',
+      'form[action*="client"] input.m-btn__submit',
+      '.m-btn--cl input[type="submit"]',
+    ], 'クライアントログインボタン'),
   ]);
 
   await page.waitForTimeout(2000);
