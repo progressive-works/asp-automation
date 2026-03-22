@@ -30,7 +30,7 @@ interface FailureResult {
   retried: boolean;
 }
 
-const LOGIN_URL = 'https://www.affiliate-b.com/';
+const LOGIN_URL = 'https://www.afi-b.com/general/client/completedlogout';
 const APPROVAL_URL = 'https://client.afi-b.com/client/b/cl/approval/';
 const DEFAULT_TIMEOUT = 60_000;
 const DOWNLOAD_TIMEOUT = 30_000;
@@ -164,26 +164,21 @@ async function login(page: Page, loginId: string, password: string): Promise<voi
   await page.goto(LOGIN_URL, { waitUntil: 'networkidle', timeout: DEFAULT_TIMEOUT });
   await saveScreenshot(kvStore, page, screenshotKeys, 'login-page');
 
-  await page.fill('input[name="login_name"]', loginId);
-  await page.fill('input[name="password"]', password);
+  await page.fill('input#remUserEmail', loginId);
+  await page.fill('input#remSiteUrl', password);
 
   await Promise.all([
     page.waitForLoadState('networkidle', { timeout: DEFAULT_TIMEOUT }).catch(() => null),
     clickFirst(page, [
       'button[type="submit"]',
       'input[type="submit"]',
-      'button:has-text("ログイン")',
     ], 'ログインボタン'),
   ]);
 
   await page.waitForTimeout(2000);
 
-  if (page.url().includes('affiliate-b.com') && !page.url().includes('client.afi-b.com')) {
-    // ログインページにまだいる可能性がある場合、URLをチェック
-    const loginForm = await page.locator('input[name="login_name"]').isVisible().catch(() => false);
-    if (loginForm) {
-      throw new Error('ログイン後もログイン画面に留まっています');
-    }
+  if (page.url().includes('failedlogin') || page.url().includes('completedlogout')) {
+    throw new Error(`ログイン失敗: ${page.url()}`);
   }
   log.info(`ログイン成功: ${page.url()}`);
 }
